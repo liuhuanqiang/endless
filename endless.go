@@ -69,6 +69,8 @@ func init() {
 	}
 }
 
+type Callback func()
+
 type endlessServer struct {
 	http.Server
 	EndlessListener  net.Listener
@@ -80,6 +82,7 @@ type endlessServer struct {
 	state            uint8
 	lock             *sync.RWMutex
 	BeforeBegin      func(add string)
+	BeforeDown       func()
 }
 
 /*
@@ -197,6 +200,11 @@ func (srv *endlessServer) Serve() (err error) {
 	srv.wg.Wait()
 	srv.setState(STATE_TERMINATE)
 	return
+}
+
+func (srv *endlessServer) RegisterOnShutdown(f func()) {
+
+	srv.BeforeDown = f
 }
 
 /*
@@ -376,6 +384,8 @@ func (srv *endlessServer) shutdown() {
 	if DefaultHammerTime >= 0 {
 		go srv.hammerTime(DefaultHammerTime)
 	}
+
+	srv.BeforeDown()
 	// disable keep-alives on existing connections
 	srv.SetKeepAlivesEnabled(false)
 	err := srv.EndlessListener.Close()

@@ -385,7 +385,6 @@ func (srv *endlessServer) shutdown() {
 		go srv.hammerTime(DefaultHammerTime)
 	}
 
-	srv.BeforeDown()
 	// disable keep-alives on existing connections
 	srv.SetKeepAlivesEnabled(false)
 	err := srv.EndlessListener.Close()
@@ -394,6 +393,8 @@ func (srv *endlessServer) shutdown() {
 	} else {
 		log.Println(syscall.Getpid(), srv.EndlessListener.Addr(), "Listener closed.")
 	}
+
+	srv.BeforeDown()
 }
 
 /*
